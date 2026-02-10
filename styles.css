@@ -275,6 +275,73 @@ body {
   font-weight: 400;
 }
 
+/* === Calendar === */
+.calendar-toolbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  user-select: none;
+}
+
+.calendar__day-header {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  padding: 8px 0;
+}
+
+.calendar__day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.calendar__day:hover {
+  border-color: var(--color-border-hover);
+  background: var(--color-surface-hover);
+}
+
+.calendar__day.exempt {
+  border-color: var(--color-danger);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  text-decoration: line-through;
+}
+
+.calendar__day.exempt:hover {
+  background: rgba(248, 113, 113, 0.2);
+}
+
+.calendar__day.weekend {
+  color: var(--color-text-muted);
+}
+
+.calendar__day.weekend.exempt {
+  color: var(--color-danger);
+}
+
+.calendar__spacer {
+  aspect-ratio: 1;
+}
+
 /* === Buttons === */
 .btn {
   font-family: inherit;

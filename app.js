@@ -3,11 +3,12 @@
   const homeSection = document.getElementById('home-section');
   const uploadSection = document.getElementById('upload-section');
   const optinPromptSection = document.getElementById('optin-prompt-section');
+  const dateExemptSection = document.getElementById('date-exempt-section');
   const filterSection = document.getElementById('filter-section');
   const resultsSection = document.getElementById('results-section');
   const optinManagerSection = document.getElementById('optin-manager-section');
 
-  const allSections = [homeSection, uploadSection, optinPromptSection, filterSection, resultsSection, optinManagerSection];
+  const allSections = [homeSection, uploadSection, optinPromptSection, dateExemptSection, filterSection, resultsSection, optinManagerSection];
 
   // --- DOM refs: Home ---
   const homeGenerate = document.getElementById('home-generate');
@@ -30,6 +31,13 @@
   const btnOptinBack = document.getElementById('btn-optin-back');
   const btnOptinSkip = document.getElementById('btn-optin-skip');
   const btnOptinContinue = document.getElementById('btn-optin-continue');
+
+  // --- DOM refs: Date Exemptions ---
+  const calendarGrid = document.getElementById('calendar-grid');
+  const btnExemptWeekends = document.getElementById('btn-exempt-weekends');
+  const btnExemptClear = document.getElementById('btn-exempt-clear');
+  const btnCalBack = document.getElementById('btn-cal-back');
+  const btnCalContinue = document.getElementById('btn-cal-continue');
 
   // --- DOM refs: Prefix Filter ---
   const prefixList = document.getElementById('prefix-list');
@@ -80,6 +88,9 @@
   let genericCardNames = new Set();
   let reportData = [];           // { name, company, days }
   let reportMonth = '';
+  let reportYear = 0;
+  let reportMonthNum = 0;        // 0-indexed month
+  let exemptedDates = new Set();  // Set of "YYYY-MM-DD" strings
 
   // Opt-in reference (used during report filtering)
   let optinRef = null;           // null = not loaded, Map<normalizedName, { name, company }>
@@ -207,6 +218,9 @@
     genericCardNames = new Set();
     reportData = [];
     reportMonth = '';
+    reportYear = 0;
+    reportMonthNum = 0;
+    exemptedDates = new Set();
     optinRef = null;
     fileInput.value = '';
     fileInfo.classList.add('hidden');
@@ -284,7 +298,9 @@
 
       if (!detectedMonth) {
         const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-        reportMonth = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+        reportMonthNum = date.getMonth();
+        reportYear = date.getFullYear();
+        reportMonth = `${monthNames[reportMonthNum]} ${reportYear}`;
         detectedMonth = true;
       }
 
@@ -342,12 +358,12 @@
   btnOptinBack.addEventListener('click', () => showSection(uploadSection));
   btnOptinSkip.addEventListener('click', () => {
     optinRef = null;
-    showSection(filterSection);
-    buildPrefixFilter();
+    showSection(dateExemptSection);
+    buildCalendar();
   });
   btnOptinContinue.addEventListener('click', () => {
-    showSection(filterSection);
-    buildPrefixFilter();
+    showSection(dateExemptSection);
+    buildCalendar();
   });
 
   function handleOptinRefFile(file) {
@@ -394,6 +410,89 @@
   }
 
   // ============================================================
+  //  REPORT: Date Exemptions (Calendar)
+  // ============================================================
+  btnCalBack.addEventListener('click', () => showSection(optinPromptSection));
+  btnCalContinue.addEventListener('click', () => {
+    showSection(filterSection);
+    buildPrefixFilter();
+  });
+
+  btnExemptWeekends.addEventListener('click', () => {
+    const daysInMonth = new Date(reportYear, reportMonthNum + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dt = new Date(reportYear, reportMonthNum, d);
+      const dow = dt.getDay();
+      if (dow === 0 || dow === 6) {
+        const dateStr = `${reportYear}-${String(reportMonthNum + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        exemptedDates.add(dateStr);
+      }
+    }
+    updateCalendarUI();
+  });
+
+  btnExemptClear.addEventListener('click', () => {
+    exemptedDates.clear();
+    updateCalendarUI();
+  });
+
+  function buildCalendar() {
+    calendarGrid.innerHTML = '';
+    exemptedDates = new Set();
+
+    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    dayLabels.forEach(label => {
+      const el = document.createElement('div');
+      el.className = 'calendar__day-header';
+      el.textContent = label;
+      calendarGrid.appendChild(el);
+    });
+
+    const firstDay = new Date(reportYear, reportMonthNum, 1).getDay();
+    const daysInMonth = new Date(reportYear, reportMonthNum + 1, 0).getDate();
+
+    // Spacers for days before the 1st
+    for (let i = 0; i < firstDay; i++) {
+      const spacer = document.createElement('div');
+      spacer.className = 'calendar__spacer';
+      calendarGrid.appendChild(spacer);
+    }
+
+    // Day cells
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dt = new Date(reportYear, reportMonthNum, d);
+      const dow = dt.getDay();
+      const dateStr = `${reportYear}-${String(reportMonthNum + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+      const cell = document.createElement('button');
+      cell.type = 'button';
+      cell.className = 'calendar__day';
+      cell.textContent = d;
+      cell.dataset.date = dateStr;
+
+      if (dow === 0 || dow === 6) cell.classList.add('weekend');
+
+      cell.addEventListener('click', () => {
+        if (exemptedDates.has(dateStr)) {
+          exemptedDates.delete(dateStr);
+          cell.classList.remove('exempt');
+        } else {
+          exemptedDates.add(dateStr);
+          cell.classList.add('exempt');
+        }
+      });
+
+      calendarGrid.appendChild(cell);
+    }
+  }
+
+  function updateCalendarUI() {
+    calendarGrid.querySelectorAll('.calendar__day').forEach(cell => {
+      cell.classList.toggle('exempt', exemptedDates.has(cell.dataset.date));
+    });
+  }
+
+  // ============================================================
   //  REPORT: Prefix Filter
   // ============================================================
   function buildPrefixFilter() {
@@ -434,7 +533,7 @@
     }
   }
 
-  btnBack.addEventListener('click', () => showSection(optinPromptSection));
+  btnBack.addEventListener('click', () => showSection(dateExemptSection));
   btnGenerate.addEventListener('click', generateReport);
   btnNewReport.addEventListener('click', () => { resetReportState(); showSection(homeSection); });
 
@@ -450,9 +549,10 @@
         return selectedPrefixes.has(r.prefix);
       });
 
-      // Deduplicate: one swipe per employee per day
+      // Deduplicate: one swipe per employee per day, excluding exempted dates
       const dayMap = {};
       filtered.forEach(({ name, date }) => {
+        if (exemptedDates.has(date)) return;
         if (!dayMap[name]) dayMap[name] = new Set();
         dayMap[name].add(date);
       });

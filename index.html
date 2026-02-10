@@ -108,6 +108,21 @@
         </div>
       </section>
 
+      <!-- ===== REPORT: Date Exemptions ===== -->
+      <section id="date-exempt-section" class="section hidden">
+        <h2 class="section__title">Exempt Dates</h2>
+        <p class="section__desc">Click on days to exempt them from the report. Exempted days will not count toward any employee's in-office total.</p>
+        <div class="calendar-toolbar">
+          <button class="btn btn--secondary btn--sm" id="btn-exempt-weekends">Exempt Weekends</button>
+          <button class="btn btn--secondary btn--sm" id="btn-exempt-clear">Clear</button>
+        </div>
+        <div class="calendar" id="calendar-grid"></div>
+        <div class="actions" style="margin-top:20px">
+          <button class="btn btn--secondary" id="btn-cal-back">Back</button>
+          <button class="btn btn--primary" id="btn-cal-continue">Continue</button>
+        </div>
+      </section>
+
       <!-- ===== REPORT: Prefix Filter ===== -->
       <section id="filter-section" class="section hidden">
         <h2 class="section__title">Filter by Employee Group</h2>
