@@ -62,8 +62,8 @@ AutoReport expects exports from a Jawl/SmartLink access control system with the 
 
 Employee names are parsed from the `Description #2` column in one of two formats:
 
-- `PREFIX - Employee Name` (e.g., `RB - Justin Sadlemyer`)
-- `PREFIX - Group (Employee Name)` (e.g., `JAN - GDI (Reimark Sanson)`)
+- `PREFIX - Employee Name` (e.g., `RB - John Doe`)
+- `PREFIX - Group (Employee Name)` (e.g., `JAN - GDI (John Doe)`)
 
 Prefixes represent organizational groups and are used as filter categories during report generation.
 
