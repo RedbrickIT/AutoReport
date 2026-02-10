@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -141,9 +142,11 @@
           <div class="results-header__actions">
             <button class="btn btn--secondary" id="btn-new-report">New Report</button>
             <button class="btn btn--primary" id="btn-export">Export Spreadsheet</button>
+            <button class="btn btn--primary hidden" id="btn-export-payroll">Export Payroll Sheet</button>
           </div>
         </div>
         <div class="results-meta" id="results-meta"></div>
+        <input type="text" class="custom-input search-input" id="results-search" placeholder="Search by name or company...">
         <div class="table-wrapper">
           <table class="table" id="results-table">
             <thead>
@@ -156,6 +159,36 @@
               </tr>
             </thead>
             <tbody id="results-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== REPORT: Payroll Export Config ===== -->
+      <section id="payroll-section" class="section hidden">
+        <div class="results-header">
+          <h2 class="section__title">Payroll Export</h2>
+          <div class="results-header__actions">
+            <button class="btn btn--secondary" id="btn-payroll-back">Back to Results</button>
+            <button class="btn btn--primary" id="btn-payroll-export">Export Payroll Sheet</button>
+          </div>
+        </div>
+        <p class="section__desc">Set the per-day reimbursement rate and assign an ADP Company Code to each company. Employees will be grouped by ADP Company Code in the exported sheet.</p>
+
+        <div class="payroll-rate-row">
+          <label class="payroll-rate-label" for="payroll-rate-input">Per Day ($)</label>
+          <input type="number" class="custom-input payroll-rate-input" id="payroll-rate-input" placeholder="e.g. 12" min="0" step="0.01">
+        </div>
+
+        <div class="table-wrapper" style="margin-top:20px">
+          <table class="table" id="payroll-company-table">
+            <thead>
+              <tr>
+                <th class="table__th table__th--num">#</th>
+                <th class="table__th">Company</th>
+                <th class="table__th table__th--adp">ADP Company Code</th>
+              </tr>
+            </thead>
+            <tbody id="payroll-company-body"></tbody>
           </table>
         </div>
       </section>
@@ -197,8 +230,11 @@
           <button class="btn btn--primary btn--sm" id="btn-add-employee">Add</button>
         </div>
 
+        <!-- Search -->
+        <input type="text" class="custom-input search-input" id="optin-search" placeholder="Search by name or company..." style="margin-top:16px">
+
         <!-- Employee table -->
-        <div class="table-wrapper" id="optin-table-wrapper" style="margin-top:16px">
+        <div class="table-wrapper" id="optin-table-wrapper" style="margin-top:12px">
           <table class="table" id="optin-table">
             <thead>
               <tr>
@@ -246,7 +282,8 @@
     <p class="loading-text">Processing...</p>
   </div>
 
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/cpexcel.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
