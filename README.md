@@ -30,7 +30,7 @@ Processes a raw access log into a clean commuter incentive report.
 
 | Employee Name | Last, First | Company | Days in Office |
 |---|---|---|---|
-| Justin Sadlemyer | Sadlemyer, Justin | Redbrick | 18 |
+| John Doe | Doe, John | Redbrick | 18 |
 
 - Each employee is counted once per day regardless of how many times they swiped.
 - Employees are sorted alphabetically by last name.
