@@ -10,8 +10,6 @@ No install or build step required. Open `index.html` in any modern browser.
 open index.html
 ```
 
-An internet connection is needed on first load for the [Figtree](https://fonts.google.com/specimen/Figtree) font (Google Fonts) and the [SheetJS](https://sheetjs.com/) spreadsheet library (CDN).
-
 ## Features
 
 ### Generate Report
