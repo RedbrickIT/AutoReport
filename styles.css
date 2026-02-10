@@ -6,22 +6,22 @@
 }
 
 :root {
-  --color-bg: #0f1117;
-  --color-surface: #1a1c25;
-  --color-surface-hover: #22242f;
-  --color-border: #2a2d3a;
-  --color-border-hover: #3d4155;
-  --color-text: #e4e4e8;
-  --color-text-muted: #8b8d9a;
+  --color-bg: #21242E;
+  --color-surface: #2d303a;
+  --color-surface-hover: #43454F;
+  --color-border: #43454F;
+  --color-border-hover: #62656F;
+  --color-text: #EFF1F5;
+  --color-text-muted: #A0A2AE;
   --color-primary: #6c8cff;
   --color-primary-hover: #839dff;
-  --color-primary-bg: rgba(108, 140, 255, 0.1);
+  --color-primary-bg: rgba(108, 140, 255, 0.15);
   --color-accent: #4ade80;
   --color-danger: #f87171;
-  --color-danger-bg: rgba(248, 113, 113, 0.1);
+  --color-danger-bg: rgba(248, 113, 113, 0.15);
   --radius: 10px;
   --radius-sm: 6px;
-  --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
 }
 
 html {
@@ -476,6 +476,34 @@ body {
   font-style: italic;
 }
 
+/* === Search Input === */
+.search-input {
+  margin-bottom: 16px;
+  max-width: 360px;
+}
+
+/* === Payroll Config === */
+.payroll-rate-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.payroll-rate-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.payroll-rate-input {
+  max-width: 140px;
+}
+
+.table__th--adp {
+  width: 200px;
+}
+
 /* === Add Employee Row === */
 .add-employee-row {
   display: flex;
@@ -632,7 +660,7 @@ body {
 .loading-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 17, 23, 0.85);
+  background: rgba(33, 36, 46, 0.85);
   display: flex;
   flex-direction: column;
   align-items: center;

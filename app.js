@@ -7,8 +7,9 @@
   const filterSection = document.getElementById('filter-section');
   const resultsSection = document.getElementById('results-section');
   const optinManagerSection = document.getElementById('optin-manager-section');
+  const payrollSection = document.getElementById('payroll-section');
 
-  const allSections = [homeSection, uploadSection, optinPromptSection, dateExemptSection, filterSection, resultsSection, optinManagerSection];
+  const allSections = [homeSection, uploadSection, optinPromptSection, dateExemptSection, filterSection, resultsSection, optinManagerSection, payrollSection];
 
   // --- DOM refs: Home ---
   const homeGenerate = document.getElementById('home-generate');
@@ -49,6 +50,14 @@
   const resultsBody = document.getElementById('results-body');
   const btnExport = document.getElementById('btn-export');
   const btnNewReport = document.getElementById('btn-new-report');
+  const btnExportPayroll = document.getElementById('btn-export-payroll');
+  const resultsSearch = document.getElementById('results-search');
+
+  // --- DOM refs: Payroll Config ---
+  const payrollRateInput = document.getElementById('payroll-rate-input');
+  const payrollCompanyBody = document.getElementById('payroll-company-body');
+  const btnPayrollBack = document.getElementById('btn-payroll-back');
+  const btnPayrollExport = document.getElementById('btn-payroll-export');
 
   // --- DOM refs: Opt-in Manager ---
   const optinMgrUploadZone = document.getElementById('optin-mgr-upload-zone');
@@ -61,6 +70,7 @@
   const optinEmpty = document.getElementById('optin-empty');
   const btnOptinHome = document.getElementById('btn-optin-home');
   const btnOptinExport = document.getElementById('btn-optin-export');
+  const optinSearch = document.getElementById('optin-search');
 
   // --- DOM refs: Opt-in Manager extra ---
   const btnOptinClear = document.getElementById('btn-optin-clear');
@@ -97,6 +107,9 @@
 
   // Opt-in manager list
   let optinManagerList = [];     // [{ name, company }]
+
+  // Payroll config
+  let companyAdpMap = {};        // company name -> ADP company code
 
   // ============================================================
   //  UTILITIES
@@ -203,6 +216,7 @@
   });
 
   homeOptin.addEventListener('click', () => {
+    optinSearch.value = '';
     showSection(optinManagerSection);
     renderOptinManager();
   });
@@ -504,11 +518,12 @@
 
     Object.keys(prefixMap).sort().forEach((prefix) => {
       const count = prefixMap[prefix].size;
-      selectedPrefixes.add(prefix);
+      const isDefault = prefix === 'RB';
+      if (isDefault) selectedPrefixes.add(prefix);
 
       const chip = document.createElement('button');
       chip.type = 'button';
-      chip.className = 'prefix-chip selected';
+      chip.className = 'prefix-chip' + (isDefault ? ' selected' : '');
       chip.innerHTML = `<span class="prefix-chip__check">${checkSvg}</span><span class="prefix-chip__label">${prefix}</span><span class="prefix-chip__count">(${count})</span>`;
 
       chip.addEventListener('click', () => {
@@ -531,6 +546,8 @@
       });
       prefixList.appendChild(chip);
     }
+
+    btnGenerate.disabled = selectedPrefixes.size === 0 && !includeGenericCards;
   }
 
   btnBack.addEventListener('click', () => showSection(dateExemptSection));
@@ -592,8 +609,16 @@
 
     resultsMeta.textContent = `${reportMonth} — ${totalEmployees} employees, ${totalDays} total in-office days — Groups: ${groups}${optinNote}`;
 
+    // Show payroll export button only when opt-in reference data is loaded
+    btnExportPayroll.classList.toggle('hidden', !optinRef);
+
+    resultsSearch.value = '';
+    renderResultsTable(reportData);
+  }
+
+  function renderResultsTable(data) {
     resultsBody.innerHTML = '';
-    reportData.forEach((row, idx) => {
+    data.forEach((row, idx) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="col-num">${idx + 1}</td>
@@ -605,6 +630,17 @@
       resultsBody.appendChild(tr);
     });
   }
+
+  resultsSearch.addEventListener('input', () => {
+    const q = resultsSearch.value.trim().toLowerCase();
+    if (!q) { renderResultsTable(reportData); return; }
+    const filtered = reportData.filter(r =>
+      r.name.toLowerCase().includes(q) ||
+      toLastFirst(r.name).toLowerCase().includes(q) ||
+      r.company.toLowerCase().includes(q)
+    );
+    renderResultsTable(filtered);
+  });
 
   // ============================================================
   //  REPORT: Export
@@ -625,6 +661,169 @@
     XLSX.utils.book_append_sheet(wb, ws, 'Report');
     XLSX.writeFile(wb, `Commuter-Report-${safeMonth}.xlsx`);
   });
+
+  // ============================================================
+  //  REPORT: Payroll Export Config
+  // ============================================================
+  btnExportPayroll.addEventListener('click', () => {
+    buildPayrollConfig();
+    showSection(payrollSection);
+  });
+
+  btnPayrollBack.addEventListener('click', () => showSection(resultsSection));
+
+  function buildPayrollConfig() {
+    // Extract unique companies from opt-in reference data
+    const companies = new Set();
+    if (optinRef) {
+      optinRef.forEach(entry => {
+        if (entry.company) companies.add(entry.company);
+      });
+    }
+
+    const sorted = [...companies].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+
+    payrollCompanyBody.innerHTML = '';
+    sorted.forEach((company, idx) => {
+      const tr = document.createElement('tr');
+
+      const tdNum = document.createElement('td');
+      tdNum.className = 'col-num';
+      tdNum.textContent = idx + 1;
+
+      const tdName = document.createElement('td');
+      tdName.textContent = company;
+
+      const tdAdp = document.createElement('td');
+      const adpInput = document.createElement('input');
+      adpInput.type = 'text';
+      adpInput.className = 'inline-input';
+      adpInput.value = companyAdpMap[company] || '';
+      adpInput.placeholder = 'Enter code...';
+      adpInput.addEventListener('change', () => {
+        companyAdpMap[company] = adpInput.value.trim();
+      });
+      // Also capture on input to stay in sync
+      adpInput.addEventListener('input', () => {
+        companyAdpMap[company] = adpInput.value.trim();
+      });
+      tdAdp.appendChild(adpInput);
+
+      tr.append(tdNum, tdName, tdAdp);
+      payrollCompanyBody.appendChild(tr);
+    });
+  }
+
+  btnPayrollExport.addEventListener('click', exportPayrollSheet);
+
+  function exportPayrollSheet() {
+    const rate = parseFloat(payrollRateInput.value);
+    if (isNaN(rate) || rate <= 0) {
+      showModal('Missing Rate', 'Please enter a valid per-day dollar amount.');
+      return;
+    }
+
+    if (reportData.length === 0) return;
+
+    // Group employees by ADP company code
+    const adpGroups = {};
+    reportData.forEach(row => {
+      const adpCode = companyAdpMap[row.company] || '';
+      if (!adpGroups[adpCode]) adpGroups[adpCode] = [];
+      adpGroups[adpCode].push(row);
+    });
+
+    // Sort group keys by member count descending (non-empty codes before empty)
+    const sortedCodes = Object.keys(adpGroups).sort((a, b) => {
+      if (!a && b) return 1;
+      if (a && !b) return -1;
+      return adpGroups[b].length - adpGroups[a].length;
+    });
+
+    const wsData = [];
+
+    // Header row
+    wsData.push(['Company', 'Employee Name (Last, First)', 'Days', 'Reimbursement', 'ADP Co Code', '', '', '']);
+
+    sortedCodes.forEach((code, groupIdx) => {
+      const employees = adpGroups[code].sort((a, b) => {
+        const aLF = toLastFirst(a.name).toLowerCase();
+        const bLF = toLastFirst(b.name).toLowerCase();
+        return aLF.localeCompare(bLF);
+      });
+
+      let totalDays = 0;
+      let totalReimbursement = 0;
+
+      employees.forEach((emp, rowIdx) => {
+        const reimbursement = emp.days * rate;
+        totalDays += emp.days;
+        totalReimbursement += reimbursement;
+
+        const dataRow = [emp.company, toLastFirst(emp.name), emp.days, reimbursement, code];
+
+        // Side notes in columns G-H for the first rows of each section
+        if (rowIdx === 0) {
+          dataRow.push('', '*Enter $ in ADP');
+        } else if (rowIdx === 1) {
+          dataRow.push('', 'Per Day ($)', rate);
+        }
+
+        wsData.push(dataRow);
+      });
+
+      // Total row
+      wsData.push(['Total', '', totalDays, totalReimbursement, '', '', '', '']);
+
+      // 3 empty rows between groups (not after last)
+      if (groupIdx < sortedCodes.length - 1) {
+        wsData.push([], [], []);
+      }
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [
+      { wch: 22 },  // Company
+      { wch: 34 },  // Employee Name (Last, First)
+      { wch: 8 },   // Days
+      { wch: 16 },  // Reimbursement
+      { wch: 14 },  // ADP Co Code
+      { wch: 3 },   // Spacer
+      { wch: 28 },  // Notes
+      { wch: 10 }   // Per Day value
+    ];
+
+    // Apply cell styles
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; R++) {
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        const addr = XLSX.utils.encode_cell({ r: R, c: C });
+        if (!ws[addr]) continue;
+
+        const isHeader = R === 0;
+        const style = {
+          font: {
+            name: 'Arial',
+            sz: 10,
+            bold: isHeader,
+            underline: isHeader
+          }
+        };
+
+        // Currency format for Reimbursement column (col D), skip header
+        if (C === 3 && R > 0 && ws[addr].v != null && ws[addr].v !== '') {
+          style.numFmt = '$#,##0.00';
+        }
+
+        ws[addr].s = style;
+      }
+    }
+
+    const wb = XLSX.utils.book_new();
+    const safeMonth = reportMonth.replace(/\s+/g, '-');
+    XLSX.utils.book_append_sheet(wb, ws, 'Payroll');
+    XLSX.writeFile(wb, `Payroll-${safeMonth}.xlsx`);
+  }
 
   // ============================================================
   //  OPT-IN REFERENCE MANAGER
@@ -762,14 +961,22 @@
     if (optinManagerList.length === 0) {
       optinTableWrapper.classList.add('hidden');
       optinEmpty.classList.remove('hidden');
+      optinSearch.classList.add('hidden');
       return;
     }
 
     optinTableWrapper.classList.remove('hidden');
     optinEmpty.classList.add('hidden');
+    optinSearch.classList.remove('hidden');
+
+    const q = optinSearch.value.trim().toLowerCase();
+    const filtered = q
+      ? optinManagerList.filter(e => e.name.toLowerCase().includes(q) || e.company.toLowerCase().includes(q))
+      : optinManagerList;
+
     optinBody.innerHTML = '';
 
-    optinManagerList.forEach((entry, idx) => {
+    filtered.forEach((entry, idx) => {
       const tr = document.createElement('tr');
 
       // Number cell
@@ -777,9 +984,18 @@
       tdNum.className = 'col-num';
       tdNum.textContent = idx + 1;
 
-      // Name cell
+      // Name cell with inline input
       const tdName = document.createElement('td');
-      tdName.textContent = entry.name;
+      const nameInput = document.createElement('input');
+      nameInput.type = 'text';
+      nameInput.className = 'inline-input';
+      nameInput.value = entry.name;
+      nameInput.addEventListener('change', () => {
+        const newName = nameInput.value.trim();
+        if (!newName) { nameInput.value = entry.name; return; }
+        entry.name = newName;
+      });
+      tdName.appendChild(nameInput);
 
       // Company cell with inline input
       const tdCompany = document.createElement('td');
@@ -801,7 +1017,8 @@
       removeBtn.className = 'btn btn--danger btn--sm';
       removeBtn.textContent = 'Remove';
       removeBtn.addEventListener('click', () => {
-        optinManagerList.splice(idx, 1);
+        const actualIdx = optinManagerList.indexOf(entry);
+        if (actualIdx !== -1) optinManagerList.splice(actualIdx, 1);
         renderOptinManager();
       });
       tdAction.appendChild(removeBtn);
@@ -810,6 +1027,8 @@
       optinBody.appendChild(tr);
     });
   }
+
+  optinSearch.addEventListener('input', () => renderOptinManager());
 
   // Export opt-in reference
   btnOptinExport.addEventListener('click', () => {
