@@ -64,6 +64,19 @@ body {
   font-weight: 400;
 }
 
+.footer {
+  text-align: center;
+  margin-top: 48px;
+}
+
+.footer__version {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  opacity: 0.6;
+}
+
 /* === Sections === */
 .section {
   animation: fadeIn 0.3s ease;

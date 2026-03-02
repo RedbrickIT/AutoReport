@@ -587,8 +587,19 @@
 
           return { name, company, days: dates.size };
         })
-        .filter(Boolean)
-        .sort((a, b) => {
+        .filter(Boolean);
+
+      // Add opt-in employees with 0 days (not found in access log)
+      if (optinRef) {
+        const included = new Set(reportData.map(r => normalizeName(r.name)));
+        optinRef.forEach(({ name, company }) => {
+          if (!included.has(normalizeName(name))) {
+            reportData.push({ name, company: company || '', days: 0 });
+          }
+        });
+      }
+
+      reportData.sort((a, b) => {
           const aLast = a.name.split(' ').pop().toLowerCase();
           const bLast = b.name.split(' ').pop().toLowerCase();
           if (aLast !== bLast) return aLast.localeCompare(bLast);
