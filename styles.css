@@ -64,17 +64,14 @@ body {
   font-weight: 400;
 }
 
-.footer {
-  text-align: center;
-  margin-top: 48px;
-}
-
-.footer__version {
+.header__version {
+  display: block;
   font-size: 0.7rem;
   color: var(--color-text-muted);
   font-weight: 400;
   letter-spacing: 0.03em;
   opacity: 0.6;
+  margin-top: 2px;
 }
 
 /* === Sections === */
@@ -495,6 +492,41 @@ body {
   max-width: 360px;
 }
 
+.search-wrapper {
+  position: relative;
+  max-width: 360px;
+  margin-top: 20px;
+  margin-bottom: 16px;
+}
+
+.search-wrapper .search-input {
+  margin-bottom: 0;
+  max-width: 100%;
+}
+
+.search-input--with-icon {
+  padding-left: 38px;
+}
+
+.search-wrapper__icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s;
+}
+
+.search-wrapper:focus-within .search-wrapper__icon {
+  color: var(--color-primary);
+}
+
 /* === Payroll Config === */
 .payroll-rate-row {
   display: flex;
@@ -518,11 +550,22 @@ body {
 }
 
 /* === Add Employee Row === */
+.add-employee-group {
+  margin-top: 20px;
+}
+
+.add-employee-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
 .add-employee-row {
   display: flex;
   gap: 10px;
   align-items: center;
-  margin-top: 20px;
 }
 
 /* === Results === */
@@ -586,6 +629,70 @@ body {
 .table__th--action {
   width: 80px;
   text-align: center;
+}
+
+/* === Sortable headers === */
+.table__th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.table__th.sortable:hover {
+  color: var(--color-text);
+}
+
+.table__th.sortable.is-sorted-asc,
+.table__th.sortable.is-sorted-desc {
+  color: var(--color-primary);
+}
+
+.th-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.th-sort {
+  position: relative;
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.table__th.sortable:hover .th-sort,
+.table__th.sortable.is-sorted-asc .th-sort,
+.table__th.sortable.is-sorted-desc .th-sort {
+  opacity: 1;
+}
+
+.th-sort__icon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 14px;
+  height: 14px;
+  display: none;
+  color: inherit;
+}
+
+.table__th.sortable .th-sort__icon--default {
+  display: inline-flex;
+}
+
+.table__th.sortable.is-sorted-asc .th-sort__icon--default,
+.table__th.sortable.is-sorted-desc .th-sort__icon--default {
+  display: none;
+}
+
+.table__th.sortable.is-sorted-asc .th-sort__icon--asc {
+  display: inline-flex;
+}
+
+.table__th.sortable.is-sorted-desc .th-sort__icon--desc {
+  display: inline-flex;
 }
 
 .table td {

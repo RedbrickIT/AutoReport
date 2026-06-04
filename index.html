@@ -14,6 +14,7 @@
   <div class="app">
     <header class="header">
       <h1 class="header__title">AutoReport</h1>
+      <span class="header__version">v1.3.0</span>
       <p class="header__subtitle">Commuter Incentive Report Generator</p>
     </header>
 
@@ -152,10 +153,46 @@
             <thead>
               <tr>
                 <th class="table__th table__th--num">#</th>
-                <th class="table__th">Employee Name</th>
-                <th class="table__th">Last, First</th>
-                <th class="table__th table__th--company">Company</th>
-                <th class="table__th table__th--days">Days in Office</th>
+                <th class="table__th sortable" data-sort-key="name" data-sort-type="string">
+                  <span class="th-content">
+                    <span>Employee Name</span>
+                    <span class="th-sort">
+                      <i data-lucide="chevrons-up-down" class="th-sort__icon th-sort__icon--default" width="14" height="14"></i>
+                      <i data-lucide="chevron-up" class="th-sort__icon th-sort__icon--asc" width="14" height="14"></i>
+                      <i data-lucide="chevron-down" class="th-sort__icon th-sort__icon--desc" width="14" height="14"></i>
+                    </span>
+                  </span>
+                </th>
+                <th class="table__th sortable" data-sort-key="lastfirst" data-sort-type="string">
+                  <span class="th-content">
+                    <span>Last, First</span>
+                    <span class="th-sort">
+                      <i data-lucide="chevrons-up-down" class="th-sort__icon th-sort__icon--default" width="14" height="14"></i>
+                      <i data-lucide="chevron-up" class="th-sort__icon th-sort__icon--asc" width="14" height="14"></i>
+                      <i data-lucide="chevron-down" class="th-sort__icon th-sort__icon--desc" width="14" height="14"></i>
+                    </span>
+                  </span>
+                </th>
+                <th class="table__th table__th--company sortable" data-sort-key="company" data-sort-type="string">
+                  <span class="th-content">
+                    <span>Company</span>
+                    <span class="th-sort">
+                      <i data-lucide="chevrons-up-down" class="th-sort__icon th-sort__icon--default" width="14" height="14"></i>
+                      <i data-lucide="chevron-up" class="th-sort__icon th-sort__icon--asc" width="14" height="14"></i>
+                      <i data-lucide="chevron-down" class="th-sort__icon th-sort__icon--desc" width="14" height="14"></i>
+                    </span>
+                  </span>
+                </th>
+                <th class="table__th table__th--days sortable" data-sort-key="days" data-sort-type="number">
+                  <span class="th-content">
+                    <span>Days in Office</span>
+                    <span class="th-sort">
+                      <i data-lucide="chevrons-up-down" class="th-sort__icon th-sort__icon--default" width="14" height="14"></i>
+                      <i data-lucide="chevron-up" class="th-sort__icon th-sort__icon--asc" width="14" height="14"></i>
+                      <i data-lucide="chevron-down" class="th-sort__icon th-sort__icon--desc" width="14" height="14"></i>
+                    </span>
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody id="results-body"></tbody>
@@ -184,8 +221,26 @@
             <thead>
               <tr>
                 <th class="table__th table__th--num">#</th>
-                <th class="table__th">Company</th>
-                <th class="table__th table__th--adp">ADP Company Code</th>
+                <th class="table__th sortable" data-sort-key="company" data-sort-type="string">
+                  <span class="th-content">
+                    <span>Company</span>
+                    <span class="th-sort">
+                      <i data-lucide="chevrons-up-down" class="th-sort__icon th-sort__icon--default" width="14" height="14"></i>
+                      <i data-lucide="chevron-up" class="th-sort__icon th-sort__icon--asc" width="14" height="14"></i>
+                      <i data-lucide="chevron-down" class="th-sort__icon th-sort__icon--desc" width="14" height="14"></i>
+                    </span>
+                  </span>
+                </th>
+                <th class="table__th table__th--adp sortable" data-sort-key="adp" data-sort-type="string">
+                  <span class="th-content">
+                    <span>ADP Company Code</span>
+                    <span class="th-sort">
+                      <i data-lucide="chevrons-up-down" class="th-sort__icon th-sort__icon--default" width="14" height="14"></i>
+                      <i data-lucide="chevron-up" class="th-sort__icon th-sort__icon--asc" width="14" height="14"></i>
+                      <i data-lucide="chevron-down" class="th-sort__icon th-sort__icon--desc" width="14" height="14"></i>
+                    </span>
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody id="payroll-company-body"></tbody>
@@ -219,19 +274,25 @@
           <input type="file" id="optin-mgr-file-input" accept=".xls,.xlsx" hidden>
         </div>
 
-        <!-- Add employee manually -->
-        <div class="add-employee-row">
-          <div class="custom-input-group">
-            <input type="text" class="custom-input" id="add-name-input" placeholder="Employee name (First Last)">
-          </div>
-          <div class="custom-input-group">
-            <input type="text" class="custom-input" id="add-company-input" placeholder="Company">
-          </div>
-          <button class="btn btn--primary btn--sm" id="btn-add-employee">Add</button>
+        <!-- Search -->
+        <div class="search-wrapper">
+          <i data-lucide="search" class="search-wrapper__icon" width="16" height="16"></i>
+          <input type="text" class="custom-input search-input search-input--with-icon" id="optin-search" placeholder="Search by name or company...">
         </div>
 
-        <!-- Search -->
-        <input type="text" class="custom-input search-input" id="optin-search" placeholder="Search by name or company..." style="margin-top:16px">
+        <!-- Add employee manually -->
+        <div class="add-employee-group">
+          <label class="add-employee-label">Add Employee</label>
+          <div class="add-employee-row">
+            <div class="custom-input-group">
+              <input type="text" class="custom-input" id="add-name-input" placeholder="Employee name (First Last)">
+            </div>
+            <div class="custom-input-group">
+              <input type="text" class="custom-input" id="add-company-input" placeholder="Company">
+            </div>
+            <button class="btn btn--primary btn--sm" id="btn-add-employee">Add</button>
+          </div>
+        </div>
 
         <!-- Employee table -->
         <div class="table-wrapper" id="optin-table-wrapper" style="margin-top:12px">
@@ -239,9 +300,27 @@
             <thead>
               <tr>
                 <th class="table__th table__th--num">#</th>
-                <th class="table__th">Employee Name</th>
-                <th class="table__th table__th--company">Company</th>
-                <th class="table__th table__th--action">Remove</th>
+                <th class="table__th sortable" data-sort-key="name" data-sort-type="string">
+                  <span class="th-content">
+                    <span>Employee Name</span>
+                    <span class="th-sort">
+                      <i data-lucide="chevrons-up-down" class="th-sort__icon th-sort__icon--default" width="14" height="14"></i>
+                      <i data-lucide="chevron-up" class="th-sort__icon th-sort__icon--asc" width="14" height="14"></i>
+                      <i data-lucide="chevron-down" class="th-sort__icon th-sort__icon--desc" width="14" height="14"></i>
+                    </span>
+                  </span>
+                </th>
+                <th class="table__th table__th--company sortable" data-sort-key="company" data-sort-type="string">
+                  <span class="th-content">
+                    <span>Company</span>
+                    <span class="th-sort">
+                      <i data-lucide="chevrons-up-down" class="th-sort__icon th-sort__icon--default" width="14" height="14"></i>
+                      <i data-lucide="chevron-up" class="th-sort__icon th-sort__icon--asc" width="14" height="14"></i>
+                      <i data-lucide="chevron-down" class="th-sort__icon th-sort__icon--desc" width="14" height="14"></i>
+                    </span>
+                  </span>
+                </th>
+                <th class="table__th table__th--action">Action</th>
               </tr>
             </thead>
             <tbody id="optin-body"></tbody>
@@ -251,9 +330,6 @@
       </section>
 
     </main>
-    <footer class="footer">
-      <span class="footer__version">v1.2.1</span>
-    </footer>
   </div>
 
   <!-- Custom Modal (info) -->
@@ -287,6 +363,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/cpexcel.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="app.js"></script>
+  <script>lucide.createIcons();</script>
 </body>
 </html>

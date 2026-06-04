@@ -110,6 +110,14 @@
 
   // Payroll config
   let companyAdpMap = {};        // company name -> ADP company code
+  let payrollCompanies = [];     // ordered list of company names for the payroll table
+
+  // Sort state per table
+  const sortStates = {
+    results: { key: null, dir: 'asc', type: 'string' },
+    payroll: { key: null, dir: 'asc', type: 'string' },
+    optin:   { key: null, dir: 'asc', type: 'string' },
+  };
 
   // ============================================================
   //  UTILITIES
@@ -169,6 +177,49 @@
 
   // Generic card names that get grouped under "Guest & Spare Cards"
   const GENERIC_NAMES = new Set(['guest', 'spare', 'master', 'test', 'unknown']);
+
+  // === Sort helpers ===
+  function compareValues(a, b, type) {
+    if (type === 'number') {
+      const an = Number(a);
+      const bn = Number(b);
+      if (Number.isNaN(an) && Number.isNaN(bn)) return 0;
+      if (Number.isNaN(an)) return 1;
+      if (Number.isNaN(bn)) return -1;
+      return an - bn;
+    }
+    const as = String(a ?? '').toLowerCase();
+    const bs = String(b ?? '').toLowerCase();
+    return as.localeCompare(bs);
+  }
+
+  function applySort(rows, state, getters) {
+    if (!state.key) return rows;
+    const getter = getters[state.key];
+    if (!getter) return rows;
+    const mul = state.dir === 'asc' ? 1 : -1;
+    return [...rows].sort((a, b) => compareValues(getter(a), getter(b), state.type) * mul);
+  }
+
+  function setupSortableTable(table, state, onChange) {
+    const ths = table.querySelectorAll('th.sortable');
+    ths.forEach(th => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.sortKey;
+        const type = th.dataset.sortType || 'string';
+        if (state.key === key) {
+          state.dir = state.dir === 'asc' ? 'desc' : 'asc';
+        } else {
+          state.key = key;
+          state.dir = 'asc';
+        }
+        state.type = type;
+        ths.forEach(t => t.classList.remove('is-sorted-asc', 'is-sorted-desc'));
+        th.classList.add(state.dir === 'asc' ? 'is-sorted-asc' : 'is-sorted-desc');
+        onChange();
+      });
+    });
+  }
 
   function setupDropZone(zone, input, onFile) {
     zone.addEventListener('click', () => input.click());
@@ -612,6 +663,13 @@
     }, 50);
   }
 
+  const resultsSortGetters = {
+    name: r => r.name,
+    lastfirst: r => toLastFirst(r.name),
+    company: r => r.company,
+    days: r => r.days,
+  };
+
   function renderResults() {
     const totalEmployees = reportData.length;
     const totalDays = reportData.reduce((sum, r) => sum + r.days, 0);
@@ -624,7 +682,21 @@
     btnExportPayroll.classList.toggle('hidden', !optinRef);
 
     resultsSearch.value = '';
-    renderResultsTable(reportData);
+    refreshResultsView();
+  }
+
+  function refreshResultsView() {
+    const q = resultsSearch.value.trim().toLowerCase();
+    let data = reportData;
+    if (q) {
+      data = reportData.filter(r =>
+        r.name.toLowerCase().includes(q) ||
+        toLastFirst(r.name).toLowerCase().includes(q) ||
+        r.company.toLowerCase().includes(q)
+      );
+    }
+    data = applySort(data, sortStates.results, resultsSortGetters);
+    renderResultsTable(data);
   }
 
   function renderResultsTable(data) {
@@ -642,16 +714,9 @@
     });
   }
 
-  resultsSearch.addEventListener('input', () => {
-    const q = resultsSearch.value.trim().toLowerCase();
-    if (!q) { renderResultsTable(reportData); return; }
-    const filtered = reportData.filter(r =>
-      r.name.toLowerCase().includes(q) ||
-      toLastFirst(r.name).toLowerCase().includes(q) ||
-      r.company.toLowerCase().includes(q)
-    );
-    renderResultsTable(filtered);
-  });
+  resultsSearch.addEventListener('input', refreshResultsView);
+
+  setupSortableTable(document.getElementById('results-table'), sortStates.results, refreshResultsView);
 
   // ============================================================
   //  REPORT: Export
@@ -683,6 +748,11 @@
 
   btnPayrollBack.addEventListener('click', () => showSection(resultsSection));
 
+  const payrollSortGetters = {
+    company: c => c,
+    adp: c => companyAdpMap[c] || '',
+  };
+
   function buildPayrollConfig() {
     // Extract unique companies from opt-in reference data
     const companies = new Set();
@@ -692,7 +762,12 @@
       });
     }
 
-    const sorted = [...companies].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    payrollCompanies = [...companies].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    renderPayrollTable();
+  }
+
+  function renderPayrollTable() {
+    const sorted = applySort(payrollCompanies, sortStates.payroll, payrollSortGetters);
 
     payrollCompanyBody.innerHTML = '';
     sorted.forEach((company, idx) => {
@@ -724,6 +799,8 @@
       payrollCompanyBody.appendChild(tr);
     });
   }
+
+  setupSortableTable(document.getElementById('payroll-company-table'), sortStates.payroll, renderPayrollTable);
 
   btnPayrollExport.addEventListener('click', exportPayrollSheet);
 
@@ -968,22 +1045,29 @@
     });
   }
 
+  const optinSortGetters = {
+    name: e => e.name,
+    company: e => e.company,
+  };
+
   function renderOptinManager() {
+    const optinSearchWrapper = optinSearch.closest('.search-wrapper') || optinSearch;
     if (optinManagerList.length === 0) {
       optinTableWrapper.classList.add('hidden');
       optinEmpty.classList.remove('hidden');
-      optinSearch.classList.add('hidden');
+      optinSearchWrapper.classList.add('hidden');
       return;
     }
 
     optinTableWrapper.classList.remove('hidden');
     optinEmpty.classList.add('hidden');
-    optinSearch.classList.remove('hidden');
+    optinSearchWrapper.classList.remove('hidden');
 
     const q = optinSearch.value.trim().toLowerCase();
-    const filtered = q
+    let filtered = q
       ? optinManagerList.filter(e => e.name.toLowerCase().includes(q) || e.company.toLowerCase().includes(q))
       : optinManagerList;
+    filtered = applySort(filtered, sortStates.optin, optinSortGetters);
 
     optinBody.innerHTML = '';
 
@@ -1040,6 +1124,8 @@
   }
 
   optinSearch.addEventListener('input', () => renderOptinManager());
+
+  setupSortableTable(document.getElementById('optin-table'), sortStates.optin, renderOptinManager);
 
   // Export opt-in reference
   btnOptinExport.addEventListener('click', () => {
